@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "psychopy-bridge-tutorial"
+version = "0.1.0"
+description = "BRIDGE PsychoPy 2024.2.4 Tutorial"
+authors = ["eduardojdiniz <edossant@andrew.cmu.edu>"]
+readme = "README.md"
+packages = [{ include = "psychopy_bridge_tutorial" }]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.11"
+psychopy = "2024.2.4"
+psychtoolbox = "*"
+ipykernel = "*"
+
+[[tool.poetry.source]]
+name = "sr-research"
+url = "https://pypi.sr-research.com"
+priority = "supplemental"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
