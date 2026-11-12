@@ -83,6 +83,7 @@ class State:
     last_trigger: float | None = None
     missing_reported: bool = False
     ready_at: float = 0.0
+    ended_at: float | None = None
 
 
 def route(state, events, h, now):
@@ -96,7 +97,7 @@ def route(state, events, h, now):
         elif state.phase in ("aborted", "timeout"):
             category = "after_terminal"
         elif key == h["abort_key"]:
-            state = replace(state, phase="aborted")
+            state = replace(state, phase="aborted", ended_at=timestamp)
             category = "abort"
         elif key == h["arm_key"] and state.phase == "ready":
             state = replace(state, phase="armed", armed_at=timestamp)
@@ -135,7 +136,9 @@ def route(state, events, h, now):
             dict(key=key, timestamp=timestamp, category=category, retrieved_at=now)
         )
     if state.phase == "armed" and now - state.armed_at >= h["start_timeout_s"]:
-        state = replace(state, phase="timeout")
+        state = replace(
+            state, phase="timeout", ended_at=state.armed_at + h["start_timeout_s"]
+        )
     if (
         state.phase == "running"
         and not state.missing_reported
@@ -148,7 +151,7 @@ def route(state, events, h, now):
     return state, records
 
 
-def score_responses(schedule, flips, records, keys):
+def score_responses(schedule, flips, records, keys, end_time):
     """Use displayed onset and a fixed response window, independent of poll time."""
     used = set()
     result = []
@@ -171,6 +174,7 @@ def score_responses(schedule, flips, records, keys):
             response="n/a",
             rt="n/a",
             correct="n/a",
+            response_window_complete=end_time >= onset + trial["response_window"],
         )
         if candidates:
             j, event = min(candidates, key=lambda x: x[1]["timestamp"])

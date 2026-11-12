@@ -6,7 +6,7 @@ Build a tilt discrimination task, then inspect how the design becomes stimuli, r
 
 1. Open **PsychoPy Standalone 2026.2.5**. The workshop was checked with the macOS arm64 post1 distribution.
 2. Open `psychopy_bridge_tutorial/starter.psyexp` in Builder. Keep the adjacent Python and JSON files together.
-3. Click **Run**. Press **Space** to arm the task, then **5** to simulate a scanner start on your keyboard.
+3. Click **Run**. Press **Space** to arm the task, then the configured trigger key, **5** by default, to simulate a scanner start on your keyboard.
 4. Report the grating tilt using **1** for left and **2** for right. **Escape** ends a run and saves partial records.
 5. Open the new folder under `psychopy_bridge_tutorial/data/`. Read `trials.tsv` alongside `inputs.tsv`.
 
@@ -33,11 +33,11 @@ In `task.json`, change `response_window_s` from 1.5 to 0.5. Predict the effect o
 | `trial_core.py`  | Schedule, input decisions and response scoring              |
 | `run_support.py` | One keyboard collector and buffered output                  |
 
-Builder reads the schedule generated from `task.json` at the start of each run. The schedule is saved with that run. There is no separate manually maintained conditions table or standalone implementation.
+Builder reads the schedule generated from `task.json` at the start of each run. Changes to the two JSON files take effect on the next run without recompiling Builder. Recompile after changing the Builder experiment itself. The schedule is saved with that run. There is no separate manually maintained conditions table or standalone implementation.
 
 ## Read the saved data
 
-`trials.tsv` contains the planned onset, onset and offset relative to the accepted start, raw flip times, response, RT and correctness. `response_window_complete` identifies whether an abort truncated a displayed trial’s response window. Flip times and input timestamps use the same task clock. `inputs.tsv` retains key-down time, retrieval time and event category, including pulse diagnostics. `frames.tsv` contains software callback intervals. `settings.json` and `schedule.tsv` retain what was run; `status.json` distinguishes complete, incomplete, timeout and aborted runs.
+`trials.tsv` contains the planned onset, onset and offset relative to the accepted start, raw flip times, response, RT and correctness. `response_window_complete` uses the timestamped abort event to identify a truncated response opportunity. A trial aborted before stimulus offset has no completed trial row. Inspect its onset in `flips.json` and the abort in `inputs.tsv`. `status.json.end` records the terminal event time and `saved_at` records the later save time. Flip times and input timestamps use the same task clock. `inputs.tsv` retains key-down time, retrieval time and event category, including pulse diagnostics. `frames.tsv` contains software callback intervals. `settings.json` and `schedule.tsv` retain what was run; `status.json` distinguishes complete, incomplete, timeout and aborted runs.
 
 The first accepted trigger after arming defines task time zero. Later pulses are recorded without restarting the schedule. Event times must be related to the first volume stored in the corresponding imaging file before making BIDS events. A missing pulse is not proof of a missing image volume. Delayed frames and physical input/display latency require evaluation on the installed setup.
 

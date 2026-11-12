@@ -114,7 +114,7 @@ class ExperimentTests(unittest.TestCase):
             dict(category="response", key=k, timestamp=t)
             for k, t in [("1", 99.9), ("2", 100.4), ("1", 100.6), ("1", 107.5)]
         ]
-        scored = score_responses(rows, flips, records, H["response_keys"])
+        scored = score_responses(rows, flips, records, H["response_keys"], 108)
         self.assertEqual(scored[0]["response"], "2")
         self.assertAlmostEqual(scored[0]["rt"], 0.4)
         self.assertEqual(
@@ -125,8 +125,31 @@ class ExperimentTests(unittest.TestCase):
     def test_partial_trial_is_not_reported_complete(self):
         rows = make_schedule(SPEC, 0)[0][:1]
         self.assertEqual(
-            score_responses(rows, {0: {"onset": 100}}, [], H["response_keys"]), []
+            score_responses(rows, {0: {"onset": 100}}, [], H["response_keys"], 100.5),
+            [],
         )
+
+    def test_delayed_abort_retrieval_preserves_response_opportunity(self):
+        trial = dict(trial=0, response_window=1.5, response_index=0)
+        for abort_at, complete in [(1.2, False), (1.5, True), (1.6, True)]:
+            with self.subTest(abort_at=abort_at):
+                state, records = route(
+                    State("running", armed_at=0, zero=0, last_trigger=0),
+                    [("escape", abort_at), ("1", abort_at + 0.01)],
+                    H,
+                    1.7,
+                )
+                self.assertEqual(state.ended_at, abort_at)
+                self.assertEqual(records[-1]["category"], "after_terminal")
+                row = score_responses(
+                    [trial],
+                    {0: dict(onset=0, offset=1)},
+                    records,
+                    H["response_keys"],
+                    state.ended_at,
+                )[0]
+                self.assertEqual(row["response_window_complete"], complete)
+                self.assertEqual(row["rt"], "n/a")
 
 
 if __name__ == "__main__":

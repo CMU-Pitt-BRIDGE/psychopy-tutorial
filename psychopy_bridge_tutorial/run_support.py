@@ -157,24 +157,28 @@ class Session:
         self.capture_flips()
         self.status = "software_demo_complete" if self.demo else "complete"
         self.run_end = self.clock.getTime()
-        self.state = replace(self.state, phase="complete")
+        self.state = replace(self.state, phase="complete", ended_at=self.run_end)
         self.save()
 
     def save(self):
         if self.saved:
             return
         self.capture_flips()
+        saved_at = self.clock.getTime()
+        end_time = self.state.ended_at
+        if end_time is None:
+            end_time = saved_at
         rows = score_responses(
-            self.trials, self.flips, self.records, self.hardware["response_keys"]
+            self.trials,
+            self.flips,
+            self.records,
+            self.hardware["response_keys"],
+            end_time,
         )
-        now = self.clock.getTime()
         for row in rows:
             row["onset"] = row["flip_onset"] - self.state.zero
             row["offset"] = row["flip_offset"] - self.state.zero
             row["onset_error"] = row["onset"] - row["planned_onset"]
-            row["response_window_complete"] = (
-                now >= row["flip_onset"] + row["response_window"]
-            )
         write_table(self.out / "trials.tsv", rows)
         write_table(self.out / "inputs.tsv", self.records)
         write_table(self.out / "frames.tsv", self.frames)
@@ -184,7 +188,8 @@ class Session:
                 dict(
                     status=self.status,
                     start=self.state.zero,
-                    end=getattr(self, "run_end", None),
+                    end=end_time,
+                    saved_at=saved_at,
                     software_demo=self.demo,
                 ),
                 indent=2,
