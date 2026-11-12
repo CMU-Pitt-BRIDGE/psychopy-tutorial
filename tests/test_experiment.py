@@ -25,7 +25,7 @@ H = dict(
 
 
 class ExperimentTests(unittest.TestCase):
-    def test_invalid_trial_design_is_rejected(self):
+    def test_invalid_settings(self):
         for spec in [
             dict(SPEC, trials_per_condition=0),
             dict(SPEC, trials_per_condition=15),
@@ -35,7 +35,7 @@ class ExperimentTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 make_schedule(spec, 0)
 
-    def test_shorter_response_window_preserves_the_schedule(self):
+    def test_shorter_window_same_schedule(self):
         original, end = make_schedule(SPEC, 0)
         changed, new_end = make_schedule(dict(SPEC, response_window_s=0.5), 0)
         self.assertEqual(
@@ -45,7 +45,7 @@ class ExperimentTests(unittest.TestCase):
         self.assertEqual(end, new_end)
         self.assertTrue(all(r["response_window"] == 0.5 for r in changed))
 
-    def test_schedule_preserves_comparison(self):
+    def test_balanced_schedule(self):
         rows, end = make_schedule(SPEC, 0)
         self.assertEqual((len(rows), end), (32, 176))
         self.assertEqual(
@@ -62,7 +62,7 @@ class ExperimentTests(unittest.TestCase):
         ] + [end - SPEC["final_fixation_s"] - rows[-1]["planned_onset"]]
         self.assertEqual(sorted(intervals), [4.0] * 16 + [6.0] * 16)
 
-    def test_mapping_reverses_between_people(self):
+    def test_button_mapping(self):
         even = make_schedule(SPEC, 0)[0]
         odd = make_schedule(SPEC, 1)[0]
         for rows, parity in [(even, 0), (odd, 1)]:
@@ -73,11 +73,11 @@ class ExperimentTests(unittest.TestCase):
                 )
             )
 
-    def test_key_collision_fails_before_run(self):
+    def test_conflicting_keys(self):
         with self.assertRaises(ValueError):
             validate_hardware(dict(H, trigger_key="1"))
 
-    def test_start_keeps_event_time(self):
+    def test_start_timestamp(self):
         state, events = route(
             State(ready_at=8), [("5", 9), ("space", 10), ("1", 11), ("5", 11)], H, 11.2
         )
@@ -89,7 +89,7 @@ class ExperimentTests(unittest.TestCase):
         self.assertEqual(events[-1]["timestamp"], 11)
         self.assertEqual(events[-1]["retrieved_at"], 11.2)
 
-    def test_later_pulses_do_not_reset_schedule(self):
+    def test_later_triggers(self):
         state = State("running", armed_at=0, zero=1, last_trigger=1)
         state, events = route(state, [("5", 1.01), ("5", 5)], H, 5.1)
         self.assertEqual(state.zero, 1)
@@ -98,13 +98,13 @@ class ExperimentTests(unittest.TestCase):
             ["duplicate_trigger", "trigger_interval_warning"],
         )
 
-    def test_abort_and_missing_start(self):
+    def test_abort_and_timeout(self):
         state, _ = route(State(), [("escape", 1)], H, 1)
         self.assertEqual(state.phase, "aborted")
         state, _ = route(State("armed", armed_at=1), [], H, 61)
         self.assertEqual(state.phase, "timeout")
 
-    def test_first_in_window_response_and_missing_value(self):
+    def test_response_scoring(self):
         rows = make_schedule(SPEC, 0)[0][:2]
         flips = {
             0: {"onset": 100.0, "offset": 101.0},
@@ -122,14 +122,14 @@ class ExperimentTests(unittest.TestCase):
             ("n/a", "n/a", "n/a"),
         )
 
-    def test_partial_trial_is_not_reported_complete(self):
+    def test_trial_without_offset(self):
         rows = make_schedule(SPEC, 0)[0][:1]
         self.assertEqual(
             score_responses(rows, {0: {"onset": 100}}, [], H["response_keys"], 100.5),
             [],
         )
 
-    def test_delayed_abort_retrieval_preserves_response_window_completion(self):
+    def test_abort_timestamp(self):
         trial = dict(trial=0, response_window=1.5, response_index=0)
         for abort_at, complete in [(1.2, False), (1.5, True), (1.6, True)]:
             with self.subTest(abort_at=abort_at):
