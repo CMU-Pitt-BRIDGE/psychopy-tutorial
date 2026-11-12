@@ -20,7 +20,7 @@ There are 32 trials, balanced across contrast and tilt, in a 176-second schedule
 
 ## Make one change and predict its effect
 
-In `task.json`, change `response_window_s` from 1.5 to 0.5. Predict the effect on missing responses and the RT distribution. Run with volunteer responses, inspect the saved rows, and discuss whether the shorter deadline changes the question. Restore the original value before comparing another change.
+In `task.json`, change `response_window_s` from 1.5 to 0.5. Predict the effect on missing responses and the RT distribution. Run with volunteer responses, inspect the saved rows, and discuss whether the shorter deadline changes the question. Restore the original value before comparing another change. Repeating a run also adds practice and fatigue. This exercise illustrates a deadline; a study comparing deadlines needs an order or group assignment that separates those effects.
 
 ## Where to edit
 
