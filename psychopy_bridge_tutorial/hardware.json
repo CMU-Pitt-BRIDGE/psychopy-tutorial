@@ -1,0 +1,5 @@
+{
+  "trigger_key": "5",
+  "response_keys": ["1", "2"],
+  "expected_tr_s": 2.0
+}

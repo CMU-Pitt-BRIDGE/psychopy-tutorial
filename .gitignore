@@ -163,3 +163,8 @@ cython_debug/
 
 # Data
 psychopy_bridge_tutorial/data/
+# Workshop runs and Builder caches
+**/data/
+**/*_lastrun.py
+__pycache__/
+*.pyc

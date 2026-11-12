@@ -1,22 +1,18 @@
-[tool.poetry]
+[project]
 name = "psychopy-bridge-tutorial"
-version = "0.1.0"
-description = "BRIDGE PsychoPy 2024.2.4 Tutorial"
-authors = ["eduardojdiniz <edossant@andrew.cmu.edu>"]
-readme = "README.md"
-packages = [{ include = "psychopy_bridge_tutorial" }]
+version = "0.2.0"
+description = "A small Builder lesson in fMRI experimental design"
+requires-python = ">=3.11,<3.12"
+# PsychoPy Standalone is the supported workshop runtime. These declarations
+# describe the checked core packages; they do not replace the Standalone app.
+dependencies = [
+  "psychopy==2026.2.5",
+  "psychtoolbox==3.0.22.2",
+  "pyglet==1.5.27",
+  "numpy==2.2.6",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.10,<3.11"
-psychopy = "2024.2.4"
-psychtoolbox = "*"
-ipykernel = "*"
-
-[[tool.poetry.source]]
-name = "sr-research"
-url = "https://pypi.sr-research.com"
-priority = "supplemental"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.ruff]
+# Builder regenerates this file. Lint the authored support code instead.
+extend-exclude = ["psychopy_bridge_tutorial/starter.py"]
+force-exclude = true

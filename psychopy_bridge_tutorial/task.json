@@ -1,0 +1,14 @@
+{
+  "name": "visualdiscrimination",
+  "trials_per_condition": 16,
+  "contrasts": { "high": 0.8, "low": 0.2 },
+  "orientations_deg": [-45, 45],
+  "stimulus_duration_s": 1.0,
+  "response_window_s": 1.5,
+  "initial_fixation_s": 8.0,
+  "final_fixation_s": 8.0,
+  "trial_intervals_s": [4.0, 6.0],
+  "grating_size_height": 0.3,
+  "grating_cycles": 6,
+  "seed": 20261111
+}
