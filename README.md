@@ -10,13 +10,13 @@ Build a tilt discrimination task, then inspect how the design becomes stimuli, r
 4. Report the grating tilt using **1** for left and **2** for right. **Escape** ends a run and saves partial records.
 5. Open the new folder under `psychopy_bridge_tutorial/data/`. Read `trials.tsv` alongside `inputs.tsv`.
 
-The default participant ID is 000. Change it in Builder's Experiment Settings → Experiment info. Odd participant IDs reverse the response mapping; the instruction screen displays the assigned keys. Run `check_keys.py` separately in PsychoPy Coder to observe the installed input names. At the scanner, replace the local key names in `hardware.json` with the names returned by the installed interface. A keyboard simulation does not test scanner synchronization or physical stimulus timing.
+The default participant ID is 000. Change it in Builder's Experiment Settings, under Experiment info. Odd participant IDs reverse the response mapping; the instruction screen displays the assigned keys. Run `check_keys.py` separately in PsychoPy Coder to observe the installed input names. At the scanner, replace the local key names in `hardware.json` with the names returned by the installed interface. A keyboard simulation does not test scanner synchronization or physical stimulus timing.
 
 ## What the experiment compares
 
 The participant reports left or right tilt at high or low contrast. Size, spatial frequency, response window and tilt counts are held constant across contrast conditions. The intended fMRI contrast is low minus high, with fixation as an implicit baseline. Interpret behavioral differences before assigning a psychological meaning to a BOLD difference.
 
-There are 32 trials, balanced across contrast and tilt, in a 176-second schedule. Gratings last 1 second; the first response within 1.5 seconds of the recorded onset flip is scored. Early and extra inputs are retained. Missing responses have `n/a` values. This short run is a teaching example, not a power calculation.
+There are 32 trials, balanced across contrast and tilt, in a 176-second schedule. Each grating has a planned duration of 1 second. The response window starts at its recorded onset flip and ends 1.5 seconds later. The first allowed response at or after onset and before the deadline is scored. Correctness is calculated separately by comparing that key with the assigned answer. Early and extra inputs are saved in `inputs.tsv`. Trials without a scored response have `n/a` response, reaction time and correctness values. This short run is a teaching example, not a power calculation.
 
 ## Make one change and predict its effect
 
@@ -37,9 +37,15 @@ Builder reads the schedule generated from `task.json` at the start of each run. 
 
 ## Read the saved data
 
-`trials.tsv` contains the planned onset, onset and offset relative to the accepted start, raw flip times, response, RT and correctness. `response_window_complete` uses the timestamped abort event to identify a truncated response opportunity. A trial aborted before stimulus offset has no completed trial row. Inspect its onset in `flips.json` and the abort in `inputs.tsv`. `status.json.end` records the terminal event time and `saved_at` records the later save time. Flip times and input timestamps use the same task clock. `inputs.tsv` retains key-down time, retrieval time and event category, including pulse diagnostics. `frames.tsv` contains software callback intervals. `settings.json` and `schedule.tsv` retain what was run; `status.json` distinguishes complete, incomplete, timeout and aborted runs.
+`trials.tsv` contains planned onset, recorded onset and offset relative to the accepted start, raw flip times, the scored response, reaction time and correctness. Reaction time is the key-down timestamp minus the recorded onset flip, in seconds. It excludes the later delay before the program retrieves the key event.
 
-The first accepted trigger after arming defines task time zero. Later pulses are recorded without restarting the schedule. Event times must be related to the first volume stored in the corresponding imaging file before making BIDS events. A missing pulse is not proof of a missing image volume. Delayed frames and physical input/display latency require evaluation on the installed setup.
+`response_window_complete` indicates whether the full response window elapsed before the run ended. For an abort, the code uses the Escape key-down timestamp, even if retrieval and saving occur later. A correct response can occur before an interruption while this flag is false. An omission means no response was scored during a full response window. An interrupted window is different.
+
+A trial without a recorded stimulus offset has no saved row in `trials.tsv`. The stimulus may still have appeared. Inspect its onset in `flips.json` and the abort in `inputs.tsv`. A missing reaction time is not zero.
+
+`status.json.end` contains the terminal event time; `saved_at` contains the later save time. Flip times and input timestamps use the same task clock. `inputs.tsv` contains key-down time, retrieval time and event category, including pulse diagnostics. `frames.tsv` contains software callback intervals. `settings.json` and `schedule.tsv` contain the configuration and schedule used for that run. The status is `complete`, `incomplete`, `timeout` or `aborted`; a completed synthetic demonstration uses `software_demo_complete`.
+
+The first accepted trigger after arming defines task time zero. Later pulses are recorded without restarting the schedule. Before preparing Brain Imaging Data Structure, or BIDS, event files, express event times relative to the acquisition start of the first stored image volume. Check which reference the event file already uses before applying an offset. A missing pulse is not proof of a missing image volume. Delayed frames and physical input/display latency require evaluation on the installed setup.
 
 ## For maintainers
 

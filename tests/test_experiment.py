@@ -129,7 +129,7 @@ class ExperimentTests(unittest.TestCase):
             [],
         )
 
-    def test_delayed_abort_retrieval_preserves_response_opportunity(self):
+    def test_delayed_abort_retrieval_preserves_response_window_completion(self):
         trial = dict(trial=0, response_window=1.5, response_index=0)
         for abort_at, complete in [(1.2, False), (1.5, True), (1.6, True)]:
             with self.subTest(abort_at=abort_at):
